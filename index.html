@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Жалобы</title>
+</head>
+<body>
+
+  <h1 style="color: white;">Форма подачи жалобы</h1>
+
+  <!-- Ввод никнейма -->
+  <div class="box active" id="stepNickname">
+    <h2>Введите ваш тг ник:</h2>
+    <input type="text" id="nickname" placeholder="Ваш никнейм">
+    <button onclick="goToCategories()">Далее</button>
+  </div>
+
+  <!-- Выбор категории -->
+  <div class="box" id="stepCategory">
+    <h2>Выберите категорию:</h2>
+    <div id="categoryButtons"></div>
+  </div>
+
+  <!-- Форма жалобы -->
+  <div class="box" id="stepComplaint">
+    <h2 id="chosenCategory"></h2>
+    <textarea id="complaintText" placeholder="Опишите вашу жалобу..."></textarea>
+    <button onclick="sendToTelegram()">Отправить жалобу</button>
+  </div>
+
+  <script>
+    const categories = [
+      "1. Напишите свой вопрос или обращение. Ответит модератор.", "2. Обязательно прикрепите видео или скрин как доказательство.", "3. Укажите ник или ID нарушителя и прикрепите скриншот / видео нарушения.",
+      "4. Опишите ситуацию и приложите подтверждение, если есть.", "5. Жалоба на ложные обвинения, фейковые скрины, дезинформацию.", "6. Укажите ник и скиньте переписку/доказательства.",
+      "7. Жалоба на развод, фейковые донаты, обман. Нужны скрины!", "8. Жалоба на ссылки, флудач, масс-рассылки. Скиньте пример.", "9. Любая другая жалоба или сообщение. Опишите ситуацию словами."
+    ];
+    let nickname = "", selectedCategory = "";
+
+    function goToCategories() {
+      const input = document.getElementById('nickname').value.trim();
+      if (input) {
+        nickname = input;
+        document.getElementById('stepNickname').classList.remove('active');
+        document.getElementById('stepCategory').classList.add('active');
+        renderCategories();
+      } else {
+        alert("Пожалуйста, введите никнейм.");
+      }
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('categoryButtons');
+      categories.forEach(category => {
+        const btn = document.createElement('button');
+        btn.innerText = category;
+        btn.onclick = () => selectCategory(category);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectCategory(category) {
+      selectedCategory = category;
+      document.getElementById('stepCategory').classList.remove('active');
+      document.getElementById('stepComplaint').classList.add('active');
+      document.getElementById('chosenCategory').innerText = `Категория: ${category}`;
+    }
+
+    function sendToTelegram() {
+      const complaint = document.getElementById('complaintText').value.trim();
+      if (!complaint) {
+        alert("Пожалуйста, введите текст жалобы.");
+        return;
+      }
+
+      const token = '7894230953:AAHL8WwyRKZjxRhF0SpHRSZfg0KrA0w69Qs';
+      const chat_id = '@dgsjwkqlfbf';
+      const message = `📢 Новая жалоба\n👤 Ник: ${nickname}\n📂 Категория: ${selectedCategory}\n📝 Текст: ${complaint}`;
+
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id, text: message })
+      }).then(response => {
+        if (response.ok) {
+          alert("Жалоба успешно отправлена!");
+          location.reload();
+        } else {
+          alert("Ошибка при отправке жалобы.");
+          response.text().then(text => console.error(text));
+        }
+      }).catch(error => {
+        alert("Ошибка соединения с Telegram.");
+        console.error(error);
+      });
+    }
+  </script>
+</body>
+</html>
